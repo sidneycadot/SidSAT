@@ -9,6 +9,6 @@
 #include <vector>
 #include <istream>
 
-const std::vector<std::vector<long>> ReadDimacsCNF(std::istream & in);
+const std::vector<std::vector<int>> ReadDimacsCNF(std::istream & in);
 
 #endif // ReadDimacsCNF_h

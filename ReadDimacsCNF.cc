@@ -43,11 +43,11 @@ static vector<string> tokenize(const string & line)
     }
 }
 
-static bool parse_long(const string & s, long * value)
+static bool parse_int(const string & s, int * value)
 {
     try
     {
-        const long v = stol(s);
+        const int v = stoi(s);
 
         if (to_string(v) != s)
         {
@@ -67,7 +67,7 @@ static bool parse_long(const string & s, long * value)
     return true;
 }
 
-const vector<vector<long>> ReadDimacsCNF(istream & in)
+const vector<vector<int>> ReadDimacsCNF(istream & in)
 {
     // We read the input line by line.
 
@@ -95,19 +95,19 @@ const vector<vector<long>> ReadDimacsCNF(istream & in)
 
     vector<string> tokens = tokenize(line);
 
-    long nv;
-    long nc;
+    int nv;
+    int nc;
 
-    bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_long(tokens[2], &nv) && parse_long(tokens[3], &nc) && nv >= 0 && nc >= 0);
+    bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_int(tokens[2], &nv) && parse_int(tokens[3], &nc) && nv >= 0 && nc >= 0);
 
     if (!ok)
     {
         throw runtime_error("Unable to interpret 'p' line from preamble.");
     }
 
-    vector<vector<long>> cnf;
+    vector<vector<int>> cnf;
 
-    vector<long> clause;
+    vector<int> clause;
 
     while (getline(in, line))
     {
@@ -123,8 +123,8 @@ const vector<vector<long>> ReadDimacsCNF(istream & in)
 
         for (const string & token : tokens)
         {
-            long value;
-            if (!parse_long(token, & value))
+            int value;
+            if (!parse_int(token, & value))
             {
                 throw runtime_error("Non-integer token found in clauses section.");
             }

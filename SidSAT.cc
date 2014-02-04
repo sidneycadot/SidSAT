@@ -9,14 +9,23 @@
 
 #include "ReadDimacsCNF.h"
 
+
+// If a clause A is a subset of a clause B, clause B can be discarded.
+// If a clause has a single literal, the value of that variable is determined.
+// If a variable occurs only as a positive (or negative) value, it can be given that value and discarded.
+// If v=a leads to UNSAT, we can conclude than v=-a.
+//
+// A clause has at minimum 2 literals
+// A variable can only occur once in
+
 using namespace std;
 
-void print_cnf(const vector<vector<long>> & cnf)
+void print_cnf(const vector<vector<int>> & cnf)
 {
-    for (const vector<long> & clause : cnf)
+    for (const vector<int> & clause : cnf)
     {
         cout << "clause";
-        for (const long & literal : clause)
+        for (const int & literal : clause)
         {
             cout << " " << literal;
         }
@@ -24,11 +33,11 @@ void print_cnf(const vector<vector<long>> & cnf)
     }
 }
 
-vector<vector<long>> cnf_assign(const vector<vector<long>> & cnf, const long assignment)
+vector<vector<int>> cnf_assign(const vector<vector<int>> & cnf, const int assignment)
 {
-    vector<vector<long>> new_cnf;
+    vector<vector<int>> new_cnf;
 
-    for (const vector<long> & clause : cnf)
+    for (const vector<int> & clause : cnf)
     {
         if (find(clause.begin(), clause.end(), assignment) != clause.end())
         {
@@ -38,9 +47,9 @@ vector<vector<long>> cnf_assign(const vector<vector<long>> & cnf, const long ass
         }
 
         // Make a new clause where remaining instances of the the literal (inverted w.r.t. assignment) are removed.
-        vector<long> new_clause;
+        vector<int> new_clause;
 
-        for (const long & literal : clause)
+        for (const int & literal : clause)
         {
             if (literal != -assignment)
             {
@@ -54,7 +63,7 @@ vector<vector<long>> cnf_assign(const vector<vector<long>> & cnf, const long ass
     return new_cnf;
 }
 
-bool SimpleDPLL(const vector<vector<long>> & cnf, vector<long> & assignments)
+bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 {
     if (cnf.empty())
     {
@@ -64,10 +73,25 @@ bool SimpleDPLL(const vector<vector<long>> & cnf, vector<long> & assignments)
     if (cnf.front().empty())
     {
         // An empty clause is not satisfiable.
+
+        if (false)
+        {
+            cout << "conflict: { ";
+            for (unsigned i = 0; i < assignments.size(); ++i)
+            {
+                if (i != 0)
+                {
+                    cout << ", ";
+                }
+                cout << assignments[i];
+            }
+            cout << " }" << endl;
+        }
+
         return false;
     }
 
-    const long assignment = cnf.front().front(); // variable number of first variable of first clause.
+    const int assignment = cnf.front().front(); // variable number of first variable of first clause.
 
     assignments.push_back(+assignment);
 
@@ -90,19 +114,26 @@ bool SimpleDPLL(const vector<vector<long>> & cnf, vector<long> & assignments)
 
 int main()
 {
-    vector<vector<long>> cnf = ReadDimacsCNF(cin);
+    vector<vector<int>> cnf = ReadDimacsCNF(cin);
 
-    std::vector<long> assignments;
+    std::vector<int> assignments;
 
     bool sat = SimpleDPLL(cnf, assignments);
 
     if (sat)
     {
-        cout << "SAT " << endl;
-        for (const long & assignment : assignments)
+        cout << "SAT: { ";
+
+        for (unsigned i = 0; i < assignments.size(); ++i)
         {
-            cout << assignment << endl;
+            if (i != 0)
+            {
+                cout << ", ";
+            }
+
+            cout << assignments[i];
         }
+        cout << " }" << endl;
     }
     else
     {
