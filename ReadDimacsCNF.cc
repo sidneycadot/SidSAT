@@ -124,6 +124,7 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
         for (const string & token : tokens)
         {
             int value;
+
             if (!parse_int(token, & value))
             {
                 throw runtime_error("Non-integer token found in clauses section.");
