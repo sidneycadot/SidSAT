@@ -15,9 +15,10 @@
 //
 // THESE RULES DO NOT CHANGE THE SOLUTION SET:
 //
-//   - If a clause A is a subset of a clause B, clause B can be discarded, since A -> B.
-//   - If v=a leads to UNSAT, we can conclude than v == -a.
-//   - In particular, if a clause has a single literal, the value of that variable is determined.
+//   - If a clause A is a subset of a clause B, clause B can be discarded, since A -> B (subsumption)
+//   - If we do a number of assignments (v1 = b1, v2 = b2, v3 = b3) and end up with an unsat system, we can conclude that (v1 != b1 OR v2 != b2 OR v3 != b3) -- a conflict clause.
+//   - In particular, with a single variable, if v = a leads to UNSAT, we can conclude than v == -a.
+//   - Single-clause implication: if a clause has a single literal, the value of that variable is determined.
 //
 // UNFORCED ASSIGNMENT (satisfiability not affected, but the solution set may become smaller).
 //
@@ -75,16 +76,19 @@ vector<vector<int>> cnf_assign(const vector<vector<int>> & cnf, const int assign
     return new_cnf;
 }
 
+// This is correct but very, very slow. A reference implementation for correctness.
 bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 {
     if (cnf.empty())
     {
+        // An AND of zero clauses is true, so the problem is solved now.
         return true;
     }
 
     if (cnf.front().empty())
     {
         // An empty clause is not satisfiable.
+        // This means that the entire CNF is not satisfiable.
 
         if (false)
         {
@@ -102,6 +106,8 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 
         return false;
     }
+
+    // We cannot immediately conclude SAT/UNSAT. We will have to branch.
 
     const int assignment = cnf.front().front(); // variable number of first variable of first clause.
 
@@ -137,7 +143,7 @@ int main()
 
     if (sat)
     {
-        cout << "SAT: { ";
+        cout << "Instance is SATISFIABLE: { ";
 
         for (unsigned i = 0; i < assignments.size(); ++i)
         {
@@ -152,7 +158,7 @@ int main()
     }
     else
     {
-        cout << "UNSAT" << endl;
+        cout << "Instance is UNSATISFIABLE." << endl;
     }
 
     return 0;

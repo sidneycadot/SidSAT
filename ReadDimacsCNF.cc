@@ -5,6 +5,7 @@
 
 #include <stdexcept>
 
+#include <string>
 #include "ReadDimacsCNF.h"
 
 using namespace std;
@@ -20,30 +21,35 @@ static vector<string> tokenize(const string & line)
 
     vector<string> tokens;
 
-    string::size_type tokenEndIndex = 0;
+    string::size_type whitespaceStartIndex = 0;
 
     for (;;)
     {
-        string::size_type tokenStartIndex = line.find_first_not_of(whitespace, tokenEndIndex);
+        string::size_type tokenStartIndex = line.find_first_not_of(whitespace, whitespaceStartIndex);
 
         if (tokenStartIndex == string::npos)
         {
-            return tokens;
+            // No next token is available -- we're done.
+            break;
         }
 
-        tokenEndIndex = line.find_first_of(whitespace, tokenStartIndex);
+        whitespaceStartIndex = line.find_first_of(whitespace, tokenStartIndex);
 
-        if (tokenEndIndex == string::npos)
+        if (whitespaceStartIndex == string::npos)
         {
+            // No whitespace found; the current token is the last token.
             tokens.push_back(line.substr(tokenStartIndex));
-            return tokens;
+            break;
         }
 
-        tokens.push_back(line.substr(tokenStartIndex, tokenEndIndex - tokenStartIndex));
+        // Push the current token
+        tokens.push_back(line.substr(tokenStartIndex, whitespaceStartIndex - tokenStartIndex));
     }
+
+    return tokens;
 }
 
-static bool parse_int(const string & s, int * value)
+static bool parse_integer(const string & s, int * value)
 {
     try
     {
@@ -73,7 +79,7 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
 
     string line;
 
-    // Read preamble. It consists
+    // Read preamble. It consists of zero or more comments (c), and ends with a problem specification (p).
 
     for (;;)
     {
@@ -93,17 +99,23 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
         throw runtime_error("Error while reading preamble.");
     }
 
+    // Tokenize the 'p' line.
+
     vector<string> tokens = tokenize(line);
+
+    // Verify validity of the 'p' line, and validate the variable and clause count.
 
     int nv;
     int nc;
 
-    bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_int(tokens[2], &nv) && parse_int(tokens[3], &nc) && nv >= 0 && nc >= 0);
+    bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_integer(tokens[2], &nv) && parse_integer(tokens[3], &nc) && nv >= 0 && nc >= 0);
 
     if (!ok)
     {
         throw runtime_error("Unable to interpret 'p' line from preamble.");
     }
+
+    // Proceed to read the clauses.
 
     vector<vector<int>> cnf;
 
@@ -111,26 +123,26 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
 
     while (getline(in, line))
     {
-        // The "%" sign as an end-of-clauses indicator is not specified by the DIMACS format specification.
+        // The "%" sign as an end-of-clauses indicator is not specified by the DIMACS format specification,
+        // but it is used by many sample CNF files.
+
         if (line == "%")
         {
             break;
         }
 
-        // cerr << "CLAUSE LINE <" << line << ">" << endl;
-
         vector<string> tokens = tokenize(line);
 
         for (const string & token : tokens)
         {
-            int value;
+            int literal;
 
-            if (!parse_int(token, & value))
+            if (!parse_integer(token, &literal))
             {
                 throw runtime_error("Non-integer token found in clauses section.");
             }
 
-            if (value == 0)
+            if (literal == 0)
             {
                 // This terminates the current clause.
                 cnf.push_back(clause);
@@ -138,14 +150,14 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
             }
             else
             {
-                if (abs(value) > nv)
+                if (abs(literal) > nv)
                 {
                     throw runtime_error("Invalid literal found.");
                 }
 
-                clause.push_back(value);
+                clause.push_back(literal);
             }
-        }
+        } // Walk the tokens of the clause line.
     } // Walk the clause lines.
 
     if (!clause.empty())
