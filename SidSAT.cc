@@ -4,6 +4,7 @@
 //////////////
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <algorithm>
 
@@ -11,7 +12,8 @@
 
 // PRECONDITIONING
 //
-// A variable can only occur once in a clause, either as a positive or as a negative literal.
+//   - A variable can only occur once in a clause, either as a positive or as a negative literal.
+//     (If a veriable occurs both positively and negatively in a clause, the clause is guaranteed to be satisfied.)
 //
 // THESE RULES DO NOT CHANGE THE SOLUTION SET:
 //
@@ -22,14 +24,14 @@
 //
 // UNFORCED ASSIGNMENT (satisfiability not affected, but the solution set may become smaller).
 //
-//     If a variable occurs only as a positive (or negative) value, it can be given that value and discarded.
+//   - If a variable occurs only as a positive (or negative) value, it can be given that value and discarded.
 //
-//     More generally, if we can find an assignment to a SUBSET of the variables that satisfies all clauses where the variables appear,
+//   - More generally, if we can find an assignment to a SUBSET of the variables that satisfies all clauses where those variables appear,
 //     we can assume that assignment (and, thus, get rid of those clauses).
 //
 // INVARIANT
 //
-// A non-trivial clause has at minimum 2 literals.
+//   - A non-trivial clause has at minimum 2 literals.
 
 using namespace std;
 
@@ -76,7 +78,9 @@ vector<vector<int>> cnf_assign(const vector<vector<int>> & cnf, const int assign
     return new_cnf;
 }
 
-// This is correct but very, very slow. A reference implementation for correctness.
+// This is correct but very, very slow.
+// Consider it a reference implementation for verifying the correctness of better algorithms.
+
 bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 {
     if (cnf.empty())
@@ -111,7 +115,9 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 
     const int assignment = cnf.front().front(); // variable number of first variable of first clause.
 
-    // Try the assignment (this will make a CNF that no longer has the variable; the first clause is guaranteed to be satisfied).
+    // Try the positive assignment.
+    // This will make a CNF that no longer has the variable in any clause;
+    //   furthermore, the first clause is guaranteed to be satisfied.
 
     assignments.push_back(+assignment);
 
@@ -120,7 +126,10 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
         return true;
     }
 
-    // Try the inverse assignment (this will make a CNF that no longer has the variable).
+    // The positive assignment didn't lead to a SAT solution.
+    // Try the inverse assignment next.
+    // The this will make a CNF that no longer has the variable in any clause.
+
     assignments.back() = -assignment;
 
     if (SimpleDPLL(cnf_assign(cnf, -assignment), assignments))
@@ -133,9 +142,11 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
     return false;
 }
 
-int main()
+void solve(const char * filename)
 {
-    vector<vector<int>> cnf = ReadDimacsCNF(cin);
+    ifstream f(filename);
+
+    vector<vector<int>> cnf = ReadDimacsCNF(f);
 
     std::vector<int> assignments;
 
@@ -143,8 +154,9 @@ int main()
 
     if (sat)
     {
-        cout << "Instance is SATISFIABLE: { ";
+        cout << "Instance '" << filename << "' is SATISFIABLE." << endl;
 
+        cout << "    solution: { ";
         for (unsigned i = 0; i < assignments.size(); ++i)
         {
             if (i != 0)
@@ -158,8 +170,15 @@ int main()
     }
     else
     {
-        cout << "Instance is UNSATISFIABLE." << endl;
+        cout << "Instance '" << filename << "' is UNSATISFIABLE." << endl;
     }
+}
 
+int main(int argc, char ** argv)
+{
+    for (int i = 1; i < argc; ++i)
+    {
+        solve(argv[i]);
+    }
     return 0;
 }

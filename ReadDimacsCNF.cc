@@ -108,7 +108,7 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
     int nv;
     int nc;
 
-    bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_integer(tokens[2], &nv) && parse_integer(tokens[3], &nc) && nv >= 0 && nc >= 0);
+    const bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_integer(tokens[2], &nv) && parse_integer(tokens[3], &nc) && nv >= 0 && nc >= 0);
 
     if (!ok)
     {
