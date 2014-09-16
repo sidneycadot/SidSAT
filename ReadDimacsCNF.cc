@@ -17,7 +17,7 @@ static bool startswith(const string & line, const string & prefix)
 
 static vector<string> tokenize(const string & line)
 {
-    const char * whitespace = " \t";
+    const char * whitespace = " \t"; // accept space and tab characters as delimiters
 
     vector<string> tokens;
 
@@ -53,24 +53,25 @@ static bool parse_integer(const string & s, int * value)
 {
     try
     {
-        const int v = stoi(s);
+        const int v = stoi(s); // interpret string as decimal integer.
 
         if (to_string(v) != s)
         {
-            throw logic_error(nullptr);
+            return false; // failure: not the canonical decimal representation of the integer.
         }
 
         if (value != nullptr)
         {
             *value = v;
         }
+
+        return true; // succes
     }
-    catch (logic_error)
+    catch (...)
     {
+        // any exception in the above indicates a conversion failure.
         return false;
     }
-
-    return true;
 }
 
 const vector<vector<int>> ReadDimacsCNF(istream & in)
@@ -79,7 +80,8 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
 
     string line;
 
-    // Read preamble. It consists of zero or more comments (c), and ends with a problem specification (p).
+    // Read the preamble.
+    // It consists of zero or more comments (c), and ends with a problem specification (p).
 
     for (;;)
     {
@@ -99,14 +101,16 @@ const vector<vector<int>> ReadDimacsCNF(istream & in)
         throw runtime_error("Error while reading preamble.");
     }
 
+    // The 'line' variable currently holds the "p" line.
+
     // Tokenize the 'p' line.
 
     vector<string> tokens = tokenize(line);
 
-    // Verify validity of the 'p' line, and validate the variable and clause count.
+    // Verify validity of the tokenized 'p' line, and validate the variable and clause count.
 
-    int nv;
-    int nc;
+    int nv; // number of variables.
+    int nc; // number of clauses.
 
     const bool ok = (tokens.size() == 4 && tokens[0] == "p" && tokens[1] == "cnf" && parse_integer(tokens[2], &nv) && parse_integer(tokens[3], &nc) && nv >= 0 && nc >= 0);
 

@@ -24,10 +24,10 @@
 //
 // UNFORCED ASSIGNMENT (satisfiability not affected, but the solution set may become smaller).
 //
-//   - If a variable occurs only as a positive (or negative) value, it can be given that value and discarded.
-//
-//   - More generally, if we can find an assignment to a SUBSET of the variables that satisfies all clauses where those variables appear,
-//     we can assume that assignment (and, thus, get rid of those clauses).
+//   - If we can find assignments to a subset of the variables that satisfy all clauses where those variables appear,
+//     we can assume those assignments (and, thus, get rid of those clauses).
+//   - As a specific case, if a single variable occurs only as a positive (or negative) literal,
+//     it can be given the corresponding value and be discarded along with its clauses.
 //
 // INVARIANT
 //
@@ -78,7 +78,7 @@ vector<vector<int>> cnf_assign(const vector<vector<int>> & cnf, const int assign
     return new_cnf;
 }
 
-// This is correct but very, very slow.
+// This is correct but very, very slow -- we don't even do unit propagation.
 // Consider it a reference implementation for verifying the correctness of better algorithms.
 
 bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
@@ -91,12 +91,12 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 
     if (cnf.front().empty())
     {
-        // An empty clause is not satisfiable.
+        // An empty clause (OR of zero literals) is false, and thus not satisfiable.
         // This means that the entire CNF is not satisfiable.
 
         if (false)
         {
-            cout << "conflict: { ";
+            cout << "    conflict: { ";
             for (unsigned i = 0; i < assignments.size(); ++i)
             {
                 if (i != 0)
@@ -117,7 +117,7 @@ bool SimpleDPLL(const vector<vector<int>> & cnf, vector<int> & assignments)
 
     // Try the positive assignment.
     // This will make a CNF that no longer has the variable in any clause;
-    //   furthermore, the first clause is guaranteed to be satisfied.
+    //   furthermore, the first clause is guaranteed to be satisfied, and will vanish.
 
     assignments.push_back(+assignment);
 
@@ -148,7 +148,7 @@ void solve(const char * filename)
 
     vector<vector<int>> cnf = ReadDimacsCNF(f);
 
-    std::vector<int> assignments;
+    vector<int> assignments;
 
     bool sat = SimpleDPLL(cnf, assignments);
 
