@@ -29,8 +29,28 @@
 //
 //   - If we can find assignments to a subset of the variables that satisfy all clauses where those variables appear,
 //     with any other literals discarded, we can assume those assignments (and, thus, get rid of those clauses).
-//   - As a specific case, if a single variable occurs only as a positive (or negative) literal,
+//   - As a specific case, if a single variable occurs only as a positive (or negative) literal in any of the clauses,
 //     it can be given the corresponding value and be discarded along with its clauses.
+//
+// INSIGHTS:
+//
+//  - Unsatisfiable problem instances constitute the most difficult problems for a solver, since it can never get lucky.
+//    The solver has to prove that the set of unclauses are unsatisfiable for any assignment.
+//  - An interesting viewpoint is therefore: how can we make an efficient generator for an unsatisfiability proof?
+//    Not that such a proof generator will necessarily fail for a satisfiable instance.
+//  - Consider the simplest possible UNSAT system: {{}}. This constitutes the base case; for any instance of its variables,
+//    it is false.
+//
+//  - One way to restate SAT as an explicit propositional formula without quantors is as follows:
+//    SAT <- (CNF /. assignment_1) OR (CNF /. assignment_2) OR (CNF /. assignment_3) OR ... OR (CNF /. assignment_w)
+//    where "expr /. assignent" denotes the substitution of an assignment to all variables, and assignment_1 to assignment_w
+//    denote the w = 2^n possible assignments to the n variables in the system. Note that this expression is humongous; it
+//    is basically a sampling of the assignment space by brute force.
+//
+//  - If all clauses have literals of different signs -- we are done! We can assign TRUE (or FALSE) to all variables.
+//    Therefore, single-sign clauses are problematic.
+//  - It is possible to completely flip the sign of a single variable.
+//  - It is possible to make a system satisfiable by adding a single variable to all single-sign clauses (with the reverse sign).
 
 using namespace std;
 
